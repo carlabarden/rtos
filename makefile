@@ -32,7 +32,6 @@ clean:
 #ARRUMAR
 run:
 	xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --command="./$(SRV) $(PORTA)" -H
-	#xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --command="nano tst"
 	@sleep 1s
 	xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --command="./$(CLI) $(IP) $(PORTA)" -H
 
