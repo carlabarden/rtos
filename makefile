@@ -19,7 +19,7 @@ OBJ_SRV=$(subst .c,.o,$(subst src/srv,obj/srv,$(CSRC_SRV)))
 
 DIR:= $(shell pwd)
 
-IP=localhost
+IP=127.0.0.1
 PORTA=9090
 
 
@@ -27,39 +27,38 @@ PORTA=9090
 all: cliente servidor
 	
 clean:
-	rm -rf obj/ bin/
+	@rm -rf obj/ bin/
 
-#ARRUMAR
 run:
-	xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --command="./$(SRV) $(PORTA)" -H
+	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Servidor" --command="./$(SRV) $(PORTA)" -H
 	@sleep 1s
-	xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --command="./$(CLI) $(IP) $(PORTA)" -H
+	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Cliente"  --command="./$(CLI) $(IP) $(PORTA)" -H
 
 ####### Usado pelas 2 regras #######
 bin:
-	mkdir -p bin/
+	@mkdir -p bin/
 
 ####### CLIENTE ########
 cliente: bin obj_cliente $(CLI)
 
 $(CLI):$(OBJ_CLI)
-	$(CC) $^ -o $(BIN)/$@ $(LDFLAGS)
+	@$(CC) $^ -o $(BIN)/$@ $(LDFLAGS)
 
 #gerar arquivos .o
 ./obj/cli/%.o: ./src/cli/%.c ./src/cli/%.h
-	$(CC) $< $(CFLAGS) -o $@
+	@$(CC) $< $(CFLAGS) -o $@
 
 #./obj/cli/main.o: ./src/cli/main.c $(HSRC_CLI)
-#	$(CC) $< $(CFLAGS) -o $@
+#	@$(CC) $< $(CFLAGS) -o $@
 
 obj_cliente:
-	mkdir -p obj/cli/
+	@mkdir -p obj/cli/
 
 limpar_cliente:
-	rm -rf obj/cli/ $(BIN)/$(CLI)
+	@rm -rf obj/cli/ $(BIN)/$(CLI)
 
 executar_cliente:
-	$(BIN)/$(CLI) $(IP):$(PORTA)
+	@./$(BIN)/$(CLI) $(IP) $(PORTA)
 
 
 
@@ -67,23 +66,23 @@ executar_cliente:
 servidor: bin obj_servidor $(SRV)
 
 $(SRV):$(OBJ_SRV)
-	$(CC) $^ -o $(BIN)/$@ $(LDFLAGS)
+	@$(CC) $^ -o $(BIN)/$@ $(LDFLAGS)
 
 #gerar arquivos .o
 ./obj/srv/%.o: ./src/srv/%.c ./src/srv/%.h
-	$(CC) $< $(CFLAGS) -o $@
+	@$(CC) $< $(CFLAGS) -o $@
 
 #./obj/srv/main.o: ./src/srv/main.c $(HSRC_CLI)
-#	$(CC) $< $(CFLAGS) -o $@
+#	@$(CC) $< $(CFLAGS) -o $@
 
 obj_servidor:
-	mkdir -p obj/srv/
+	@mkdir -p obj/srv/
 
 limpar_servidor:
-	rm -rf obj/srv/ $(BIN)/$(SRV)
+	@rm -rf obj/srv/ $(BIN)/$(SRV)
 
 executar_servidor:
-	$(BIN)/$(SRV) $(PORTA)
+	@./$(BIN)/$(SRV) $(PORTA)
 
 
 #alvo falso
