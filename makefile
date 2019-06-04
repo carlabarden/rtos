@@ -32,7 +32,7 @@ clean:
 run:
 	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Servidor" --command="./$(SRV) $(PORTA)" -H
 	@sleep 1s
-	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Cliente"  --command="./$(CLI) $(IP) $(PORTA)" -H
+	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Cliente"  --command="./$(CLI) $(IP) $(PORTA)" -H 
 
 ####### Usado pelas 2 regras #######
 bin:

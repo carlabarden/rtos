@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
         printf("Erro, porta nao definida!\n");
         exit(1);
     }
+    printf("\n\n\t Monitor ON.\n\n");
     
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -53,18 +54,30 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    printf("\n\n\t Monitor ON.\n\n");
+    printf("\n\n\t Simulador ON.\n\n");
     pthread_create(&rede_out, NULL, enviar_para_simulador, (void *)&arg);
     pthread_create(&rede_in, NULL, receber_do_simulador, (void *)id);
 
    
    //ler comandos
     do{   
-        fgets(comando, 50, stdin);
-        pthread_mutex_lock(&c);
-        flag = TRUE;
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&c);
+        fgets(comando, 27, stdin);
+        
+        int v = valida_linha(comando);
+        if (v){
+            pthread_mutex_lock(&c);
+            flag = TRUE;
+            pthread_cond_signal(&cond);
+            pthread_mutex_unlock(&c);
+            
+           /* printf("%s\n", comando);
+            printf("%lu\n",strlen(comando));
+            */
+        }
+        else{
+            bzero(comando, sizeof(comando));
+        }
+        
      
     }while(TRUE);
     

@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     printf("\n\n\t Simulador ON.\n\n");
     pthread_create(&rede_in, NULL, receber_do_monitor, NULL);
     pthread_create(&rede_out, NULL, enviar_para_monitor, NULL);
-    
+     
     pthread_join(rede_in, NULL);  
     return 0;
 }
