@@ -87,6 +87,7 @@ void *enviar_para_monitor(void *arg){
         while(!flag){//ao contrário -> var cond
             pthread_cond_wait(&cond,&c);
         }
+        //função externa para setar o retorno
         //if (valida_comando){}
         //por enquanto
        /* if (comando.comando[1] != '\n' && comando.comando[1] && '\0' && comando.comando[1] != ' '){

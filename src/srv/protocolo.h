@@ -13,8 +13,6 @@ typedef struct __prot__{
     char alvo[10];
     char opt[4];
     char valor[3]; //atoi
-    //int  valor;
-    //char fim[2]; //@ == fim
 }PROTOCOLO, *PTR_PROTOCOLO;
 
 

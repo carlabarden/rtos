@@ -3,6 +3,8 @@ Disciplina: Sistemas Operacionais de Tempo Real
 Professor: Osmar Santos
 
 ---------------- Instruções --------------------
-Entrar na pasta e:
-make : compilar
-make clean : apagar executável e arquivos objeto
+Compilar:
+$ make 
+
+Apagar executável e arquivos objeto:
+$ make clean  
