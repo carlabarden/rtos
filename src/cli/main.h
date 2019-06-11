@@ -11,7 +11,7 @@
 #include <netdb.h> 
 #include <arpa/inet.h>		// inet_aton
 #include <pthread.h>
-#include "protocolo.h"
+#include "../shr/protocolo.h"
 
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 
