@@ -27,31 +27,33 @@ void gera_protocolo (char stream[], PROTOCOLO *estrutura){
         }
         
         strncpy(estrutura->comando, aux[0], 9);
-        strcat(estrutura->comando, "\0");
-        //int a = strlen(estrutura->comando);
-        //estrutura->comando[a] = '\0';
+        //strcat(estrutura->comando, "\0");
+        int a = strlen(estrutura->comando);
+        estrutura->comando[a] = '\0';
         
         strncpy(estrutura->alvo, aux[1], 9);
-        strcat(estrutura->alvo, "\0");
-        //a = strlen(estrutura->alvo);
-        //estrutura->alvo[a] = '\0';
+        //strcat(estrutura->alvo, "\0");
+        a = strlen(estrutura->alvo);
+        estrutura->alvo[a] = '\0';
         
         strncpy(estrutura->opt, aux[2], 3);
-        strcat(estrutura->opt, "\0"); 
-        //a = strlen(estrutura->opt);
-        //estrutura->opt[a] = '\0';
+        //strcat(estrutura->opt, "\0"); 
+        a = strlen(estrutura->opt);
+        estrutura->opt[a] = '\0';
         
         strncpy(estrutura->valor, aux[3], 2);
-        strcat(estrutura->valor, "\0"); 
-        //a = strlen(estrutura->valor);
-        //estrutura->valor[a] = '\0';  
-       /* 
+        //strcat(estrutura->valor, "\0"); 
+        a = strlen(estrutura->valor);
+        estrutura->valor[a] = '\0';  
+       
+       /*
         printf("\n%s, %lu\n", estrutura->comando , strlen(estrutura->comando)); 
         printf("\n%s, %lu\n", estrutura->alvo , strlen(estrutura->alvo)); 
         printf("\n%s, %lu\n", estrutura->opt , strlen(estrutura->opt)); 
         printf("\n%s, %lu\n", estrutura->valor , strlen(estrutura->valor)); 
+        
         */
-        //TODO: arrumar o \0 que não tá indo
+        
 
     }
     else {
@@ -65,12 +67,13 @@ void imprime_protocolo (PROTOCOLO *estrutura){
     printf("COMANDO   ALVO      OPÇÃO     VALOR\n");
     printf("%7s %7s %10s %5s\n",
             estrutura->comando, estrutura->alvo, estrutura->opt, estrutura->valor);
-   /* 
+   /*
     printf("%lu   %s\n", strlen(estrutura->comando), estrutura->comando);
     printf("%lu   %s\n", strlen(estrutura->alvo), estrutura->alvo);
     printf("%lu   %s\n", strlen(estrutura->opt), estrutura->opt);
     printf("%lu   %s\n", strlen(estrutura->valor), estrutura->valor);
-   */ 
+    */
+   
     
 }
 

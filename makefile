@@ -1,6 +1,6 @@
 CC       = gcc
-CFLAGS	 = -O3 -std=c11 -c -Wall -pedantic -W -g
-LDFLAGS  = -lpthread
+CFLAGS	 = -O3 -c #-g -W -Wall -pedantic -std=c11
+LDFLAGS  = -lrt -lpthread 
 
 CLI=cli
 SRV=srv
@@ -20,7 +20,7 @@ OBJ_SRV=$(subst .c,.o,$(subst src/srv,obj/srv,$(CSRC_SRV)))
 OBJ_INC=$(subst .c,.o,$(subst src/shr,obj/inc,$(CSRC_INC)))
 
 IP=127.0.0.1
-PORTA=9090
+PORTA=6066
 
 DIR:= $(shell pwd)
 
@@ -61,7 +61,7 @@ $(CLI): $(OBJ_CLI) $(OBJ_INC)
 	
 #gerar arquivos .o
 ./obj/cli/%.o: ./src/cli/%.c ./src/cli/%.h
-	@$(CC) $< $(CFLAGS) -o $@
+	@$(CC) $< $(CFLAGS) -o $@ 
 
 #./obj/cli/main.o: ./src/cli/main.c $(HSRC_CLI)
 #	@$(CC) $< $(CFLAGS) -o $@

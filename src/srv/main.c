@@ -61,18 +61,17 @@ int main(int argc, char *argv[]) {
    
    //ler comandos
     do{   
-        fgets(comando, 27, stdin);
-        
-        int v = valida_linha(comando);
-        if (v){
+        fgets(comando, sizeof(comando), stdin);
+          
+        if (valida_linha(comando)){
             pthread_mutex_lock(&c);
             flag = TRUE;
             pthread_cond_signal(&cond);
             pthread_mutex_unlock(&c);
             
-           /* printf("%s\n", comando);
-            printf("%lu\n",strlen(comando));
-            */
+           // printf("%s\n", comando);
+            //printf("%lu\n",strlen(comando));
+            
         }
         else{
             bzero(comando, sizeof(comando));

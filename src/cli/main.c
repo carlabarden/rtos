@@ -3,8 +3,29 @@
 
 int main(int argc, char *argv[]) {
 
-    int portno, n;
-    char buffer[50];
+    //para gerar números aleatorios
+    srand((unsigned)time(NULL));
+
+    //para tarefas periódicas
+	sigset_t alarm_sig;
+	int i;
+	//para leitura dos 3 sensores
+	pthread_t biometria_th;
+	pthread_t presenca_th;
+	pthread_t temperatura_th;
+    
+    sigemptyset (&alarm_sig);
+	for (i = SIGRTMIN; i <= SIGRTMAX; i++)
+		sigaddset (&alarm_sig, i);
+	sigprocmask (SIG_BLOCK, &alarm_sig, NULL);
+	
+	pthread_create (&biometria_th,     NULL, ler_biometria,    NULL) ;
+	pthread_create (&presenca_th,      NULL, ler_presenca,     NULL) ;
+	pthread_create (&temperatura_th,   NULL, ler_temperatura,  NULL) ;
+	
+    //rede
+    int portno;
+    //char buffer[50];
     struct sockaddr_in serv_addr;
     pthread_t rede_in, rede_out;
 
@@ -32,10 +53,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     
+    
     printf("\n\n\t Simulador ON.\n\n");
     pthread_create(&rede_in, NULL, receber_do_monitor, NULL);
     pthread_create(&rede_out, NULL, enviar_para_monitor, NULL);
-     
-    pthread_join(rede_in, NULL);  
+    
+    //para executar comandos recebidos do usuario
+    pthread_t user;
+    pthread_create(&user, NULL, executar_comando_usuario, NULL);
+    
+    inicia_sistemas();
+
+    pthread_join(user, NULL);  
+       
     return 0;
 }
