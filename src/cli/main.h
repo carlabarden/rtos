@@ -1,4 +1,4 @@
-//####################### CLIENTE ########################
+//############################### CLIENTE ###################################
 #pragma once
 
 #include <stdio.h>
@@ -14,7 +14,6 @@
 #include <netdb.h> 
 #include <arpa/inet.h>      // inet_aton
 #include <pthread.h>
-//#include "../shr/protocolo.h"
 #include "simulador.h"
 
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
@@ -22,86 +21,187 @@
 #define TRUE 1
 #define FALSE 0
 
-// ####################### SIMULADOR #########################
-// ########## ESTADOS ###########
-// Temperatura varia entre 17 e 24
-// 0 para ar condicionado desligado
-// temperatura ajustada pelo usuário
-int temperatura = 20;
-
-// Luz varia entre 0 e 2
-// 0 == desligada
-// 1 == ligada, intensidade máxima
-// 2 == ligada, meia luz
-int luz = 0;
-
-// Porta pode estar aberta ou fechada
-// 0 = fechada
-// 1 = aberta
-int porta = 0;
-
-// Biometria, para facilitar a implementação, será uma sequencia numérica nesta simulação
-unsigned int biometria = 12;
-
-// Janela pode estar aberta ou fechada
-// 0 = fechada
-// 1 = aberta
-int janela = 0;
-
-// Cortinas podem estar abertas, fechadas ou semi-abertas
-// 0 = fechada
-// 1 = aberta
-// 2 = semiaberta
-int cortinas = 0;
-
-// Sensores
-// Sensor de presença, para a iluminação
-// 0 == FALSE == ninguém
-// 1 == TRUE == alguém entrou
-int sensor_presenca = FALSE;
-
-// Sensor de biometria, para abrir a porta
-// 0 == FALSE == leitura não detectada
-// !=0 == TRUE == leitura detectada, valor na própria variável
-int sensor_biometria = FALSE; 
-
-// Sensor da leitura da temperatura
-// 0 == FALSE == ar condicionado desligado
-// !=0 == TRUE == leitura do sensor
-int sensor_temperatura = 0;
-
-
-// Comando recebido do monitor
+// ########################## SIMULADOR #####################################
+//      Todos os valores serão inicializados na função inicia_sistemas.
+//  *
+//  *
+//  *
+//                  Controle de Temperatura
+//  *
+//  temperatura         ==  temperatura ajustada pelo usuário
+//  sensor_temperatura  ==  leitura do sensor de temperatura
+//  m_temp              ==  mutex da temperatura
+//  m_stemp             ==  mutex do sensor_temperatura
+//  *
+//  Temperatura do ar condicionado varia entre 17 e 24 graus
+//  Como a temperatura com o ar ligado tem um intervalo fixo, não há 
+//  necessidade de ter uma variável específica para salvar o estado da
+//  temperatura, como há no caso da iluminação.
+//  temperatura = 0            ==  ar condicionado desligado
+//  temperatura entre 17 e 24   ==  ar condicionado ligado 
+//  temperatura = -1 indica que o usuário ainda não ajustou suas preferências.
+//  Valor padrão é temperatura = -1 (desligado, sem pref do user)
+int temperatura;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_temp = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  Para armazenar a leitura do sensor de temperatura
+//  Valor padrão é sensor_temperatura = aleatorio entre -5 e 45;
+int sensor_temperatura;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_stemp = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  *
+//  *
+//                  Controle de Iluminação
+//  *
+//  luz                 ==  iluminação atual
+//  sensor_presenca     ==  leitura do sensor de presenca
+//  m_luz               ==  mutex de luz
+//  m_spresenca         ==  mutex de sensor_presenca
+//  *
+//  A luz armazena o estado atual da iluminação. A iluminação pode tanto ter
+//  sido ajustada pelo usuário (valores positivos) quanto pelo programa
+//  (valores negativos). Os valores que indicam o estado são simétricos, para
+//  que através do cálculo do valor absoluto do estado, saiba-se qual é a 
+//  iluminação, independente de quem (usuário ou programa) a ajustou. Saber quem
+//  ajustou a iluminação é necessário, por exemplo, caso o usuário desligue a luz.
+//  Mesmo que o sensor de presença indique alguém, a luz não deverá ser acesa.
+//  A luz pode estar ligada em 100% da intensidade, ligada em 50% da intensidade
+//  (meia luz) ou desligada.
+//  *
+//  luz = -2        ==  luz ligada pelo programa, 100% de intensidade
+//  luz = -1        ==  luz desligada pelo programa
+//  luz = 0         ==  luz desligada (padrão)
+//  luz = 1         ==  luz desligada pelo usuário
+//  luz = 2         ==  luz ligada pelo usuário, 100% de intensidade
+//  luz = 3         ==  luz ligada pelo usuário, 50% de intensidade   
+//  O valor padrão é luz = 0
+int luz;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_luz = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  Para armazenar a leitura do sensor de presença.
+//  sensor_presenca = 0     ==  não há ninguém  (FALSE)
+//  sensor_presenca = 1     ==  há alguém       (TRUE)
+//  O valor padrão é sensor_presença = FALSE
+int sensor_presenca;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_spresenca = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  *
+//  *
+//                  Controle de Biometria
+//  *
+//  A biometria será simulada como uma sequência numérica, para facilitar a
+//  implementação. 
+//  biometria           ==  valor salvo de biometria
+//  sensor_biometria    ==  leitura do sensor de biometria
+//  m_bio               ==  mutex biometria
+//  m_sbio              ==  mutex sensor_biometria
+//  *
+//  Biometria é um unsigned int com um valor salvo para abrir a porta.
+//  Valor padrão é 12345
+unsigned int biometria;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_bio = PTHREAD_MUTEX_INITIALIZER;
+//  * 
+//  Para armazenar a leitura do sensor de biometria.
+//  sensor_biometria = 0    ==  não há leitura
+//  sensor_biometria != 0   ==  o valor lido
+unsigned int sensor_biometria;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_sbio = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  *
+//  *
+//                  Controle da Porta
+//  *
+//  porta       ==  controla o estado da porta (aberta ou fechada)
+//  m_porta     ==  mutex associado
+//  *
+//  A porta pode estar aberta ou fechada.
+//  porta = 0       ==  porta fechada
+//  porta = 1       ==  porta aberta
+int porta;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_porta = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  *
+//  *
+//                  Controle da Janela
+//  *
+//  janela       ==  controla o estado da janela (aberta ou fechada)
+//  m_janela     ==  mutex associado
+//  *
+//  A janela pode estar aberta ou fechada.
+//  janela = 0       ==  janela fechada
+//  janela = 1       ==  janela aberta
+int janela;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_janela = PTHREAD_MUTEX_INITIALIZER;
+//  *
+//  *
+//  *
+//                  Controle da Cortina (persiana)
+//  *
+//  cortina       ==  controla o estado da cortina (aberta, fechada, ou entreaberta)
+//  m_cortina     ==  mutex associado
+//  *
+//  A cortina pode estar aberta, fechada ou entreaberta.
+//  cortina = 0       ==  cortina fechada
+//  cortina = 1       ==  cortina aberta
+//  cortina = 2       ==  cortina entreaberta
+int cortina;
+//  *
+//  para garantir a exclusão mútua
+pthread_mutex_t m_cortina = PTHREAD_MUTEX_INITIALIZER;
+//  *
+// ########################## ########## #####################################
+//  *
+//  Comando recebido do monitor
+//  *
 PROTOCOLO comando;
+pthread_mutex_t m_comm = PTHREAD_MUTEX_INITIALIZER;
 
-// Para exclusão mútua na atualização das variáveis globais pelo usuario
-pthread_mutex_t comm = PTHREAD_MUTEX_INITIALIZER;
-
-// Para exclusão mútua na atualização das variáveis globais pelo programa
-pthread_mutex_t prog = PTHREAD_MUTEX_INITIALIZER;
-
-// Se o comando executou corretamente ou não -- Retornar para monitor
+//  *
+//  Se o comando executou corretamente ou não -- Retornar para monitor
+//  *
 char retorno[30] = "\0";
+pthread_mutex_t m_ret = PTHREAD_MUTEX_INITIALIZER;
 
-
-//espera ter comando para poder executar
+//  *
+//  Espera ter comando para poder executar
+//  *
 int flag_executar_comando = FALSE;
 pthread_mutex_t exec      = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  cond_exec = PTHREAD_COND_INITIALIZER;
 
-//espera precisar escrever para acordar escrita
+//  *
+//  Espera precisar escrever para acordar escrita
+//  *
 int flag_escrita_rede = FALSE;
 pthread_mutex_t c = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  cond_esc = PTHREAD_COND_INITIALIZER;
 
 
-//############################## REDE ##############################
+//#################################### REDE ###################################
 int sockfd;
 
-/*  Threads responsáveis pela leitura e escrita na rede.
-*   A leitura roda indefinidamente, a escrita, por ser bloqueante, 
-*  só acorda quando é necessário (via variáveis de condição).
-*/
+//  *
+//  Threads responsáveis pela leitura e escrita na rede.
+//  A leitura roda indefinidamente, a escrita, por ser bloqueante, 
+//  só acorda quando é necessário (via variáveis de condição).
+//  *
+
 void *receber_do_monitor(void *arg) {
     
     char buffer[30];
@@ -173,14 +273,14 @@ void *enviar_para_monitor(void *arg){
     }    
 }
 
-//#################### Comando Usuário #############################
-/* Thread que fica dormente até que seja recebido um comando válido.
-*  Quando isso acontece, ela acorda, tenta a execução do comando e 
-* dorme novamente (para não ocorrer espera ocupada). Se ela não con-
-* seguir executar o comando, retorna FALSE, para poder enviar o 
-* retorno ao servidor.
-*/
-
+//######################## Comando Usuário ###############################
+//  *
+//  Thread que fica dormente até que seja recebido um comando válido.
+//  Quando isso acontece, ela acorda, tenta a execução do comando e 
+//  dorme novamente (para não ocorrer espera ocupada). Se ela não con-
+//  seguir executar o comando, retorna FALSE, para poder enviar o 
+//  retorno ao servidor.
+//  *
 
 void *executar_comando_usuario(void *arg){
     
@@ -207,10 +307,10 @@ void *executar_comando_usuario(void *arg){
     }
 }
 
-//############################# TIMER ##############################
-/*  Timer responsável pelas tarefas periódicas. 
-*   
-*/
+//################################# TIMER ################################
+//  *
+//    Timer responsável pelas tarefas periódicas. 
+//  *
 
 struct periodic_info{
     int sig;    
@@ -264,13 +364,15 @@ static void wait_period (struct periodic_info *info){
     int sig;
     sigwait (&(info->alarm_sig), &sig);
 }
+//  *
+//   As tarefas periódicas necessárias para a leitura dos sensores.
+//   Se a leitura feita diferir dos valores setados pelo usuário, será feito o ajuste 
+//   necessário aqui mesmo. 
+//  *
 
+// TODO: MELHORAR DESCRIÇÃO TAREFAS PERIÓDICAS
 
-/*   As tarefas periódicas necessárias para a leitura dos sensores.
-* Se a leitura feita diferir dos valores setados pelo usuário, será feito o ajuste 
-* necessário aqui mesmo. */
-
-/*  Se há a biometria correta, abre a porta*/
+//  Se há a biometria correta, abre a porta
 static void *ler_biometria (void *arg){
 
     struct periodic_info info;
@@ -291,24 +393,22 @@ static void *ler_biometria (void *arg){
            fechar_porta(); 
            printf("\n\t AUTO: Porta Fechada \n\n");
            
-           pthread_mutex_lock(&prog);
+           pthread_mutex_lock(&m_sbio);
            sensor_biometria = 0;
-           pthread_mutex_unlock(&prog);
+           pthread_mutex_unlock(&m_sbio);
            
         }
         else{
         
-           pthread_mutex_lock(&prog);
+           pthread_mutex_lock(&m_sbio);
            sensor_biometria = 0;
-           pthread_mutex_unlock(&prog);
+           pthread_mutex_unlock(&m_sbio);
         }
     }
-    
-   // retorno[0] = "\0";
     return NULL;
 }
 
-/*  Se o sensor de presença captar alguem, acende a luz;*/
+//  Se o sensor de presença captar alguem, acende a luz
 static void *ler_presenca (void *arg){
     struct periodic_info info;
 
@@ -330,34 +430,33 @@ static void *ler_presenca (void *arg){
         }
        
     }
-    //retorno[0] = "\0";
     return NULL;
 }
 
-/*  Temperatura padrão: 20 graus*/
+//  Mantém a temperatura
 static void *ler_temperatura (void *arg){
 
     struct periodic_info info;
     
     //guardar temperatura setada pelo user
-    int temperatura_usuario = temperatura;
+    int temperatura_usuario = 0;
     
     //período = 5s
     make_periodic (5000000, &info);
     while (TRUE){
     
         wait_period (&info);
+        temperatura_usuario = temperatura;
         ler_sensor_temperatura();
         printf("\t Leitura Sensor Temperatura: %d \n", temperatura);
         
         if (sensor_temperatura != temperatura_usuario){
-            pthread_mutex_lock(&prog);
+            pthread_mutex_lock(&m_temp);
             temperatura = temperatura_usuario;
-            pthread_mutex_unlock(&prog);
+            pthread_mutex_unlock(&m_temp);
             printf("\n\t AUTO: Temperatura ajustada para: %d \n\n", temperatura);
         }
         
     }
-   // retorno[0] = "\0";
     return NULL;
 }

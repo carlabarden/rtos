@@ -43,8 +43,7 @@ int main(int argc, char *argv[]) {
 
     ARG arg;
     arg.id = 0;
-    arg.sockfd = sockfd;  
-    long id = 1;  
+    arg.sockfd = sockfd;   
 
     nodo.newsockfd = accept(sockfd,(struct sockaddr *) &cli_addr,&clilen);
     if (nodo.newsockfd < 0) {
@@ -56,12 +55,13 @@ int main(int argc, char *argv[]) {
     
     printf("\n\n\t Simulador ON.\n\n");
     pthread_create(&rede_out, NULL, enviar_para_simulador, (void *)&arg);
-    pthread_create(&rede_in, NULL, receber_do_simulador, (void *)id);
+    pthread_create(&rede_in, NULL, receber_do_simulador, NULL);
 
    
    //ler comandos
     do{   
         fgets(comando, sizeof(comando), stdin);
+        printf("\n");
           
         if (valida_linha(comando)){
             pthread_mutex_lock(&c);
@@ -77,7 +77,6 @@ int main(int argc, char *argv[]) {
             bzero(comando, sizeof(comando));
         }
         
-     
     }while(TRUE);
     
     return 0; 

@@ -10,139 +10,210 @@
 #define TRUE  1
 #define FALSE 0
 
-// Temperatura varia entre 17 e 24
-// 0 para ar condicionado desligado
-// temperatura ajustada pelo usuário
-extern int temperatura ;
-
-// Luz varia entre 0 e 2
-// 0 == desligada
-// 1 == ligada, intensidade máxima
-// 2 == ligada, meia luz
-extern int luz;
-
-// Porta pode estar aberta ou fechada
-// 0 = fechada
-// 1 = aberta
-extern int porta; 
-
-// Biometria, para facilitar a implementação, será uma sequencia numérica nesta simulação
-extern unsigned int biometria;
-
-// Janela pode estar aberta ou fechada
-// 0 = fechada
-// 1 = aberta
-extern int janela;
-
-// Cortinas podem estar abertas, fechadas ou semi-abertas
-// 0 = fechada
-// 1 = aberta
-// 2 = semiaberta
-extern int cortinas; 
-
-// Sensores == PARA A LEITURA
-// Sensor de presença, para a iluminação
-// 0 == FALSE == ninguém
-// 1 == TRUE == alguém entrou
-extern int sensor_presenca;
-
-// Sensor de biometria, para abrir a porta
-// 0 == FALSE == leitura não detectada
-// !=0 == TRUE == leitura detectada, valor na própria variável
-extern int sensor_biometria;
-
-// Sensor da leitura da temperatura
-// 0 == FALSE == ar condicionado desligado
-// !=0 == TRUE == leitura do sensor
+// ########################## SIMULADOR #####################################
+//  *
+//                  Controle de Temperatura
+//  *
+//  temperatura         ==  temperatura ajustada pelo usuário
+//  sensor_temperatura  ==  leitura do sensor de temperatura
+//  m_temp              ==  mutex da temperatura
+//  m_stemp             ==  mutex do sensor_temperatura
+//  *
+//  Temperatura do ar condicionado varia entre 17 e 24 graus
+//  Como a temperatura com o ar ligado tem um intervalo fixo, não há 
+//  necessidade de ter uma variável específica para salvar o estado da
+//  temperatura, como há no caso da iluminação.
+//  temperatura = 0            ==  ar condicionado desligado
+//  temperatura entre 17 e 24   ==  ar condicionado ligado 
+//  temperatura = -1 indica que o usuário ainda não ajustou suas preferências.
+//  Valor padrão é temperatura = -1 (desligado, sem pref do user)
+extern int temperatura;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_temp;
+//  *
+//  Para armazenar a leitura do sensor de temperatura
+//  Valor padrão é sensor_temperatura = aleatorio entre -5 e 45;
 extern int sensor_temperatura;
-
-// Comando recebido do monitor
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_stemp;
+//  *
+//  *
+//  *
+//                  Controle de Iluminação
+//  *
+//  luz                 ==  iluminação atual
+//  sensor_presenca     ==  leitura do sensor de presenca
+//  m_luz               ==  mutex de luz
+//  m_spresenca         ==  mutex de sensor_presenca
+//  *
+//  A luz armazena o estado atual da iluminação. A iluminação pode tanto ter
+//  sido ajustada pelo usuário (valores positivos) quanto pelo programa
+//  (valores negativos). Os valores que indicam o estado são simétricos, para
+//  que através do cálculo do valor absoluto do estado, saiba-se qual é a 
+//  iluminação, independente de quem (usuário ou programa) a ajustou. Saber quem
+//  ajustou a iluminação é necessário, por exemplo, caso o usuário desligue a luz.
+//  Mesmo que o sensor de presença indique alguém, a luz não deverá ser acesa.
+//  A luz pode estar ligada em 100% da intensidade, ligada em 50% da intensidade
+//  (meia luz) ou desligada.
+//  *
+//  luz = -2        ==  luz ligada pelo programa, 100% de intensidade
+//  luz = -1        ==  luz desligada pelo programa
+//  luz = 0         ==  luz desligada (padrão)
+//  luz = 1         ==  luz desligada pelo usuário
+//  luz = 2         ==  luz ligada pelo usuário, 100% de intensidade
+//  luz = 3         ==  luz ligada pelo usuário, 50% de intensidade   
+//  O valor padrão é luz = 0
+extern int luz;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_luz;
+//  *
+//  Para armazenar a leitura do sensor de presença.
+//  sensor_presenca = 0     ==  não há ninguém  (FALSE)
+//  sensor_presenca = 1     ==  há alguém       (TRUE)
+//  O valor padrão é sensor_presença = FALSE
+extern int sensor_presenca;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_spresenca;
+//  *
+//  *
+//  *
+//                  Controle de Biometria
+//  *
+//  A biometria será simulada como uma sequência numérica, para facilitar a
+//  implementação. 
+//  biometria           ==  valor salvo de biometria
+//  sensor_biometria    ==  leitura do sensor de biometria
+//  m_bio               ==  mutex biometria
+//  m_sbio              ==  mutex sensor_biometria
+//  *
+//  Biometria é um unsigned int com um valor salvo para abrir a porta.
+//  Valor padrão é 12345
+extern unsigned int biometria;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_bio;
+//  * 
+//  Para armazenar a leitura do sensor de biometria.
+//  sensor_biometria = 0    ==  não há leitura
+//  sensor_biometria != 0   ==  o valor lido
+extern unsigned int sensor_biometria;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_sbio;
+//  *
+//  *
+//  *
+//                  Controle da Porta
+//  *
+//  porta       ==  controla o estado da porta (aberta ou fechada)
+//  m_porta     ==  mutex associado
+//  *
+//  A porta pode estar aberta ou fechada.
+//  porta = 0       ==  porta fechada
+//  porta = 1       ==  porta aberta
+extern int porta;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_porta;
+//  *
+//  *
+//  *
+//                  Controle da Janela
+//  *
+//  janela       ==  controla o estado da janela (aberta ou fechada)
+//  m_janela     ==  mutex associado
+//  *
+//  A janela pode estar aberta ou fechada.
+//  janela = 0       ==  janela fechada
+//  janela = 1       ==  janela aberta
+extern int janela;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_janela;
+//  *
+//  *
+//  *
+//                  Controle da Cortina (persiana)
+//  *
+//  cortina       ==  controla o estado da cortina (aberta, fechada, ou entreaberta)
+//  m_cortina     ==  mutex associado
+//  *
+//  A cortina pode estar aberta, fechada ou entreaberta.
+//  cortina = 0       ==  cortina fechada
+//  cortina = 1       ==  cortina aberta
+//  cortina = 2       ==  cortina entreaberta
+extern int cortina;
+//  *
+//  para garantir a exclusão mútua
+extern pthread_mutex_t m_cortina;
+//  *
+// ########################## ########## #####################################
+//  *
+//  Comando recebido do monitor
+//  *
 extern PROTOCOLO comando;
-
-// Se o comando executou corretamente ou não -- Retornar para monitor
+extern pthread_mutex_t m_comm;
+//  *
+//  Se o comando executou corretamente ou não -- Retornar para monitor
+//  *
 extern char retorno[30];
-
-//Para exclusão mútua na atualização das variáveis globais
-extern pthread_mutex_t comm;
-
-// Para exclusão mútua na atualização das variáveis globais pelo programa
-extern pthread_mutex_t prog;
+extern pthread_mutex_t m_ret;
+//  *
  
- 
-//seta todos os sistemas para os valores padrão
-int inicia_sistemas();
+//  seta todos os sistemas para os valores padrão
+void inicia_sistemas();
 
-//cadastra biometria
-int cadastrar_biometria(unsigned int n_bio);
+//  cadastra biometria
+void cadastrar_biometria(unsigned int n_bio);
 
-//ar condicionado - temperatura
-void ligar_ar();
+//  ar condicionado - temperatura
+void ligar_ar(int temp);
 void desligar_ar();
 void ajustar_temperatura(int temp);
 
-//luz
+//  luz
 void ligar_luz();
 void desligar_luz();
 void meia_luz();
 
-//porta
+//  porta
 void abrir_porta();
 void fechar_porta();
 
-//janela
+//  janela
 void abrir_janela();
 void fechar_janela();
 
-//cortinas
-void abrir_cortinas();
-void fechar_cortinas();
-void cortinas_entreabertas();
+//  cortinas
+void abrir_cortina();
+void fechar_cortina();
+void cortina_entreaberta();
 
-//executa o comando do usuário
-int executar_comando();
+//  executa o comando do usuário
+void executar_comando();
 
-
-//gerar números aleatórios entre a e b
-// a < b
-// primeiro parametro é dado por x - 1
+//  gerar números aleatórios entre a e b
+//  a < b
+//  primeiro parametro é dado por x - 1
 int gera_aleatorio(int a, int b);
 
-//simula uma perturbação na temperatura, para a tarefa periódica ajustar
+//  simula uma perturbação na temperatura, para a tarefa periódica ajustar
 void ler_sensor_temperatura();
 
-//simula uma leitura no sensor de biometria
+//  simula uma leitura no sensor de biometria
 void ler_sensor_biometria();
 
-//simula uma leitura no sensor de presença
+//  simula uma leitura no sensor de presença
 void ler_sensor_presenca();
 
 
 
-
-//TODO:
-//executar comando é um switch case que chama a função daqui
-//no protocolo, terá a validação do comando (se a palavra é um comando msm)
-//o main chamará só a função executar comando, que tratará de chamar a função correta aqui
-// terá que ter  mutex no comando e nas variáveis daqui
-// thread com var_cond pra executar comando só quando tiver comando
-
-//são dois subsistemas
-
-// 1- ler comando da rede
-// 2- executar comando
-// 3- retornar para monitor
-
-// 1- ler do sensor
-// 2- verificar se é o que foi pedido
-//      gerar variação aleatoria, aleatoriamente
-//      efetuar correção
-//   se não for, ajustar
-//  se for, ok
-
-// sempre setar NULL no comando para o sensor de presença funcionar
-
-// Fazer os comandos (validação em SM
-// Implementar executar_comando
-
-
-
+//TODO: Luz (definida pelo user)
+//      Mudar ordem comandos (alvo comando p/ comando alvo)
+//      protocolo (suportar espaços)
+//      mutex: 1 por região compartilhada, ou seja, um por variável 
+//      Ver folha Osmar

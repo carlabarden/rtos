@@ -1,5 +1,5 @@
 CC       = gcc
-CFLAGS	 = -O3 -c #-g -W -Wall -pedantic -std=c11
+CFLAGS	 = -O3 -c  -W -Wall -pedantic #-std=c11 -g
 LDFLAGS  = -lrt -lpthread 
 
 CLI=cli
@@ -19,11 +19,13 @@ OBJ_CLI=$(subst .c,.o,$(subst src/cli,obj/cli,$(CSRC_CLI)))
 OBJ_SRV=$(subst .c,.o,$(subst src/srv,obj/srv,$(CSRC_SRV)))
 OBJ_INC=$(subst .c,.o,$(subst src/shr,obj/inc,$(CSRC_INC)))
 
-IP=127.0.0.1
-PORTA=6066
 
 DIR:= $(shell pwd)
 
+
+#porta aleatoria entre 6000 e 6030
+PORTA:= $(shell RANDOM=$$(date +%s) && echo "$$(($$RANDOM % 30 + 6000))")
+IP=127.0.0.1
 
 ####### ALL ########
 all: cliente servidor
@@ -32,6 +34,7 @@ clean:
 	@rm -rf obj/ bin/
 
 run:
+	@echo "$(PORTA)"
 	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Servidor" --command="./$(SRV) $(PORTA)" -H
 	@sleep 1s
 	@xfce4-terminal --default-working-directory=$(DIR)/$(BIN) --initial-title="Cliente"  --command="./$(CLI) $(IP) $(PORTA)" -H 
