@@ -1,6 +1,6 @@
 CC       = gcc
-CFLAGS	 = -O3 -c  -W -Wall -pedantic #-std=c11 -g
-LDFLAGS  = -lrt -lpthread 
+CFLAGS	 = -O3 -c  #-W -Wall -pedantic -std=c11 -g
+LDFLAGS  = -lrt -lpthread #-lm
 
 CLI=cli
 SRV=srv

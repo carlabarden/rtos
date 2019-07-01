@@ -39,8 +39,8 @@
 //  temperatura, como há no caso da iluminação.
 //  temperatura = 0            ==  ar condicionado desligado
 //  temperatura entre 17 e 24   ==  ar condicionado ligado 
-//  temperatura = -1 indica que o usuário ainda não ajustou suas preferências.
-//  Valor padrão é temperatura = -1 (desligado, sem pref do user)
+//  temperatura = 0 indica que o usuário ainda não ajustou suas preferências.
+//  Valor padrão é temperatura = 0 (desligado, sem pref do user)
 int temperatura;
 //  *
 //  para garantir a exclusão mútua
@@ -105,7 +105,7 @@ pthread_mutex_t m_spresenca = PTHREAD_MUTEX_INITIALIZER;
 //  m_sbio              ==  mutex sensor_biometria
 //  *
 //  Biometria é um unsigned int com um valor salvo para abrir a porta.
-//  Valor padrão é 12345
+//  Valor padrão é 1234
 unsigned int biometria;
 //  *
 //  para garantir a exclusão mútua
@@ -370,8 +370,6 @@ static void wait_period (struct periodic_info *info){
 //   necessário aqui mesmo. 
 //  *
 
-// TODO: MELHORAR DESCRIÇÃO TAREFAS PERIÓDICAS
-
 //  Se há a biometria correta, abre a porta
 static void *ler_biometria (void *arg){
 
@@ -382,10 +380,10 @@ static void *ler_biometria (void *arg){
     while (TRUE){
         wait_period (&info);
         ler_sensor_biometria();
-        printf("\t Leitura Sensor Biometria: %d \n", sensor_biometria);
+        printf("Leitura Sensor Biometria: %d \n", sensor_biometria);
         
         // Se é a biometria do usuário
-        if (sensor_biometria == biometria){
+        if (sensor_biometria == biometria && porta == 0){
             
            abrir_porta();
            printf("\n\t AUTO: Porta Aberta \n\n");
@@ -410,6 +408,7 @@ static void *ler_biometria (void *arg){
 
 //  Se o sensor de presença captar alguem, acende a luz
 static void *ler_presenca (void *arg){
+   
     struct periodic_info info;
 
    //período = 1s
@@ -418,14 +417,14 @@ static void *ler_presenca (void *arg){
     
         wait_period (&info);
         ler_sensor_presenca();
-        printf("\t Leitura Sensor Presença: %d\n", sensor_presenca);
+        printf("Leitura Sensor Presença: %d\n", sensor_presenca);
         
-        if (sensor_presenca == TRUE && luz == 0){
-            ligar_luz();
+        if (sensor_presenca == TRUE && luz == -1){
+            ligar_luz(PROG);
             printf("\n\t AUTO: Luz Ligada \n\n");
         } 
-        else if (sensor_presenca == FALSE && (luz != 0)){
-            desligar_luz();
+        else if (sensor_presenca == FALSE && luz == -2){
+            desligar_luz(PROG);
             printf("\n\t AUTO: Luz Desligada \n\n");
         }
        
@@ -437,26 +436,16 @@ static void *ler_presenca (void *arg){
 static void *ler_temperatura (void *arg){
 
     struct periodic_info info;
-    
-    //guardar temperatura setada pelo user
-    int temperatura_usuario = 0;
-    
-    //período = 5s
+
+   //período = 5s
     make_periodic (5000000, &info);
     while (TRUE){
     
         wait_period (&info);
-        temperatura_usuario = temperatura;
         ler_sensor_temperatura();
-        printf("\t Leitura Sensor Temperatura: %d \n", temperatura);
-        
-        if (sensor_temperatura != temperatura_usuario){
-            pthread_mutex_lock(&m_temp);
-            temperatura = temperatura_usuario;
-            pthread_mutex_unlock(&m_temp);
-            printf("\n\t AUTO: Temperatura ajustada para: %d \n\n", temperatura);
-        }
-        
+        printf("Leitura Sensor Temperatura: %d \n", sensor_temperatura);
+       
     }
     return NULL;
 }
+

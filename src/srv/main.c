@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
    
    //ler comandos
-    do{   
+    do{  
         fgets(comando, sizeof(comando), stdin);
         printf("\n");
           
@@ -68,9 +68,6 @@ int main(int argc, char *argv[]) {
             flag = TRUE;
             pthread_cond_signal(&cond);
             pthread_mutex_unlock(&c);
-            
-           // printf("%s\n", comando);
-            //printf("%lu\n",strlen(comando));
             
         }
         else{

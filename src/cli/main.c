@@ -5,6 +5,9 @@ int main(int argc, char *argv[]) {
 
     //para gerar números aleatorios
     srand((unsigned)time(NULL));
+    
+    // ajustar valores padrão
+    inicia_sistemas();
 
     //para tarefas periódicas
 	sigset_t alarm_sig;
@@ -53,7 +56,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     
-    
     printf("\n\n\t Simulador ON.\n\n");
     pthread_create(&rede_in, NULL, receber_do_monitor, NULL);
     pthread_create(&rede_out, NULL, enviar_para_monitor, NULL);
@@ -61,8 +63,6 @@ int main(int argc, char *argv[]) {
     //para executar comandos recebidos do usuario
     pthread_t user;
     pthread_create(&user, NULL, executar_comando_usuario, NULL);
-    
-    inicia_sistemas();
 
     pthread_join(user, NULL);  
        

@@ -5,10 +5,15 @@
 #include <time.h>
 #include <string.h>
 #include <pthread.h>
+//#include <math.h>
 #include "../shr/protocolo.h"
 
 #define TRUE  1
 #define FALSE 0
+
+#define USER  1
+#define PROG -1
+
 
 // ########################## SIMULADOR #####################################
 //  *
@@ -25,8 +30,8 @@
 //  temperatura, como há no caso da iluminação.
 //  temperatura = 0            ==  ar condicionado desligado
 //  temperatura entre 17 e 24   ==  ar condicionado ligado 
-//  temperatura = -1 indica que o usuário ainda não ajustou suas preferências.
-//  Valor padrão é temperatura = -1 (desligado, sem pref do user)
+//  temperatura = 0 indica que o usuário ainda não ajustou suas preferências.
+//  Valor padrão é temperatura = 0 (desligado, sem pref do user)
 extern int temperatura;
 //  *
 //  para garantir a exclusão mútua
@@ -91,7 +96,7 @@ extern pthread_mutex_t m_spresenca;
 //  m_sbio              ==  mutex sensor_biometria
 //  *
 //  Biometria é um unsigned int com um valor salvo para abrir a porta.
-//  Valor padrão é 12345
+//  Valor padrão é 1234
 extern unsigned int biometria;
 //  *
 //  para garantir a exclusão mútua
@@ -170,28 +175,42 @@ void inicia_sistemas();
 //  cadastra biometria
 void cadastrar_biometria(unsigned int n_bio);
 
+
+//  FUNÇÕES RETORNAR_...    ==  escrevem na variável retorno[]
+//  para retornar comando inválido
+void comando_invalido();
+
 //  ar condicionado - temperatura
 void ligar_ar(int temp);
 void desligar_ar();
 void ajustar_temperatura(int temp);
+void retornar_temp();
+void retornar_temp_sensor();
 
 //  luz
-void ligar_luz();
-void desligar_luz();
+//  int quem  ==  para saber se foi o user ou o prog
+//      user  ==  1
+//      prog  ==  0
+void ligar_luz(int quem);
+void desligar_luz(int quem);
 void meia_luz();
+void retornar_luz();
 
 //  porta
 void abrir_porta();
 void fechar_porta();
+void retornar_porta();
 
 //  janela
 void abrir_janela();
 void fechar_janela();
+void retornar_janela();
 
 //  cortinas
 void abrir_cortina();
 void fechar_cortina();
 void cortina_entreaberta();
+void retornar_cortina();
 
 //  executa o comando do usuário
 void executar_comando();
@@ -211,9 +230,3 @@ void ler_sensor_biometria();
 void ler_sensor_presenca();
 
 
-
-//TODO: Luz (definida pelo user)
-//      Mudar ordem comandos (alvo comando p/ comando alvo)
-//      protocolo (suportar espaços)
-//      mutex: 1 por região compartilhada, ou seja, um por variável 
-//      Ver folha Osmar

@@ -4,56 +4,66 @@ void inicia_sistemas(){
 
     //  temperatura    
     pthread_mutex_lock(&m_temp);
-    temperatura = -1;
-    pthread_mutex_lock(&m_temp); 
+    temperatura = 0;
+    pthread_mutex_unlock(&m_temp); 
     
     //  sensor temperatura
     pthread_mutex_lock(&m_stemp);
-    sensor_temperatura = gera_aleatorio (-6, 45);
-    pthread_mutex_lock(&m_temp);
+    sensor_temperatura = gera_aleatorio (-3, 30);
+    pthread_mutex_unlock(&m_stemp);
     
     //  luz
     pthread_mutex_lock(&m_luz);
-    luz = 0;
-    pthread_mutex_lock(&m_luz);
+    luz = -1;
+    pthread_mutex_unlock(&m_luz);
     
     //  sensor presença
     pthread_mutex_lock(&m_spresenca);
     sensor_presenca = FALSE;
-    pthread_mutex_lock(&m_spresenca); 
+    pthread_mutex_unlock(&m_spresenca); 
     
     //  biometria
     pthread_mutex_lock(&m_bio);
-    biometria = 12345;
-    pthread_mutex_lock(&m_bio); 
+    biometria = 1234;
+    pthread_mutex_unlock(&m_bio); 
     
     //  sensor biometria
     pthread_mutex_lock(&m_sbio);
     sensor_biometria = FALSE;
-    pthread_mutex_lock(&m_sbio); 
+    pthread_mutex_unlock(&m_sbio); 
     
     //  porta
     pthread_mutex_lock(&m_porta);
-    porta = FECHADA;
-    pthread_mutex_lock(&m_porta); 
+    porta = 0;
+    pthread_mutex_unlock(&m_porta); 
     
     //  janela
     pthread_mutex_lock(&m_janela);
-    janela = FECHADA;
-    pthread_mutex_lock(&m_janela); 
+    janela = 0;
+    pthread_mutex_unlock(&m_janela); 
     
     //  cortina
     pthread_mutex_lock(&m_cortina);
-    cortina = FECHADA;
-    pthread_mutex_lock(&m_cortina); 
+    cortina = 0;
+    pthread_mutex_unlock(&m_cortina); 
 }
 
 void cadastrar_biometria(unsigned int n_bio){
 
     pthread_mutex_lock(&m_bio);
     biometria = n_bio;
-    strcpy(retorno, "\n\tBiometria cadastrada!\n\0");
     pthread_mutex_unlock(&m_bio);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tBiometria cadastrada!\n\n\0");
+    pthread_mutex_unlock(&m_ret);  
+}
+
+void comando_invalido(){
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tComando Inválido!!!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 
@@ -61,8 +71,11 @@ void ligar_ar(int temp){
 
     pthread_mutex_lock(&m_temp);
     temperatura = temp;
-    strcpy(retorno, "\n\tAr ligado!\n\0");
     pthread_mutex_unlock(&m_temp);
+    
+    pthread_mutex_lock(&m_ret);    
+    strcpy(retorno, "\n\tAr ligado!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 
@@ -70,8 +83,11 @@ void desligar_ar(){
 
     pthread_mutex_lock(&m_temp);
     temperatura = 0;
-    strcpy(retorno, "\n\tAr desligado!\n\0");
     pthread_mutex_unlock(&m_temp);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tAr desligado!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 void ajustar_temperatura(int temp){
@@ -80,113 +96,252 @@ void ajustar_temperatura(int temp){
     temperatura = temp;
     if (temperatura < 17) temperatura = 17;
     if (temperatura > 24) temperatura = 24;
-    strcpy(retorno, "\n\tTemperatura ajustada!\n\0");
     pthread_mutex_unlock(&m_temp);
+
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tTemperatura ajustada!\n\n\0");  
+    pthread_mutex_unlock(&m_ret);  
 }
 
-void ligar_luz(){
+void retornar_temp(){
 
-    pthread_mutex_lock(&m_luz);
-    luz = 2;
-    strcpy(retorno, "\n\tLuz ligada!\n\0");
-    pthread_mutex_unlock(&m_luz);
+    int aux = temperatura;
+    char b[20] = "\0";
+    
+    if (aux  == 0) sprintf(b, "\n\tAr desligado!\n\n");
+    else sprintf(b, "\n\tTemperatura: %d\n\n", aux);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, b);
+    pthread_mutex_unlock(&m_ret);
+
 }
 
-void desligar_luz(){
+void retornar_temp_sensor(){
+        
+    int aux = sensor_temperatura;
+    char b[20] = "\0";
+    sprintf(b, "\n\tSensor: %d\n\n", aux);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, b);
+    pthread_mutex_unlock(&m_ret);
+}
+
+void ligar_luz(int quem){
 
     pthread_mutex_lock(&m_luz);
-    luz = 1;
-    strcpy(retorno, "\n\tLuz desligada!\n\0");
+    luz = 2 * quem;
     pthread_mutex_unlock(&m_luz);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tLuz ligada!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
+
+}
+
+void desligar_luz(int quem){
+
+    pthread_mutex_lock(&m_luz);
+    luz = 1 * quem;
+    pthread_mutex_unlock(&m_luz);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tLuz desligada!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 void meia_luz(){
 
     pthread_mutex_lock(&m_luz);
     luz = 3;
-    strcpy(retorno, "\n\tMeia luz!\n\0");
     pthread_mutex_unlock(&m_luz);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tMeia luz!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
+}
+
+void retornar_luz(){
+    
+    int aux = abs(luz);
+    
+    if (aux == 1){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tLuz desligada!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else if (aux == 2){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tLuz ligada!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else if (aux == 3){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tMeia luz!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
 }
 
 void abrir_porta(){
 
     pthread_mutex_lock(&m_porta);
-    porta = ABERTA;
-    strcpy(retorno, "\n\tPorta aberta!\n\0");
+    porta = 1;
     pthread_mutex_unlock(&m_porta);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tPorta aberta!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 void fechar_porta(){
 
     pthread_mutex_lock(&m_porta);
     porta = 0;
-    strcpy(retorno, "\n\tPorta fechada!\n\0");
     pthread_mutex_unlock(&m_porta);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tPorta fechada!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
+}
+
+void retornar_porta(){
+    
+    int aux = porta;
+    
+    if (aux == 0){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tPorta fechada!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else{
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tPorta aberta!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
 }
 
 void abrir_janela(){
 
     pthread_mutex_lock(&m_janela);
     janela = 1;
-    strcpy(retorno, "\n\tJanela aberta!\n\0");
     pthread_mutex_unlock(&m_janela);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tJanela aberta!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 void fechar_janela(){
 
     pthread_mutex_lock(&m_janela);
     janela = 0;
-    strcpy(retorno, "\n\tJanela fechada!\n\0");
     pthread_mutex_unlock(&m_janela);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tJanela fechada!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
+}
+
+void retornar_janela(){
+    
+    int aux = janela;
+    
+    if (aux == 0){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tJanela fechada!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else {
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tJanela aberta!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+
 }
 
 void abrir_cortina(){
 
     pthread_mutex_lock(&m_cortina);
     cortina = 1;
-    strcpy(retorno, "\n\tCortina aberta!\n\0");
     pthread_mutex_unlock(&m_cortina);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tCortina aberta!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
 void fechar_cortina(){
 
     pthread_mutex_lock(&m_cortina);
     cortina = 0;
-    strcpy(retorno, "\n\tCortina fechada!\n\0");
     pthread_mutex_unlock(&m_cortina);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tCortina fechada!\n\0");
+    pthread_mutex_unlock(&m_ret);
 }
 
-void cortina_entreabertas(){
+void cortina_entreaberta(){
 
     pthread_mutex_lock(&m_cortina);
     cortina = 2;
-    strcpy(retorno, "\n\tCortina entreaberta!\n\0");
     pthread_mutex_unlock(&m_cortina);
+    
+    pthread_mutex_lock(&m_ret);
+    strcpy(retorno, "\n\tCortina entreaberta!\n\n\0");
+    pthread_mutex_unlock(&m_ret);
+}
+
+void retornar_cortina(){
+    
+    int aux = cortina;
+    
+    if (aux == 0){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tCortina fechada!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else if (aux == 1){
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tCortina aberta!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
+    else {
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tCortina entreaberta!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+    }
 }
 
 
-//ler o mesmo número 3x
-int cont_t = 0;
 void ler_sensor_temperatura(){
-    
-    if (cont_t == 3){
-    
-        cont_t = 0;
-        //variação a ser somada na temperatura, entre 0 e 5
-        int var = gera_aleatorio(0, 5);
 
+    //se o ar não foi ligado
+    if (temperatura == 0){
+                    
+        //gera uma variação aleatória para a leitura do sensor
         pthread_mutex_lock(&m_stemp);
-        sensor_temperatura = temperatura + var;
-        temperatura = sensor_temperatura;
+        sensor_temperatura += gera_aleatorio(-2,1);
         pthread_mutex_unlock(&m_stemp);
+      
+    } //se o ar foi ligado
+    else {
+             
+        if (temperatura > sensor_temperatura){
+           
+            pthread_mutex_lock(&m_stemp);
+            sensor_temperatura += 1;
+            pthread_mutex_unlock(&m_stemp);     
+        }
+        else if (temperatura < sensor_temperatura){
+           
+            pthread_mutex_lock(&m_stemp);
+            sensor_temperatura -= 1;
+            pthread_mutex_unlock(&m_stemp);     
+        }
+                       
     }
-    else{
- 
-        cont_t += 1;
-        pthread_mutex_lock(&m_stemp);
-        sensor_temperatura = temperatura;
-        pthread_mutex_unlock(&m_stemp);
-    }  
 }
 
 
@@ -201,8 +356,10 @@ void ler_sensor_biometria(){
         cont_b = 0;
         if (tem_gente){
         
+            unsigned int aux = biometria;
+        
             pthread_mutex_lock(&m_sbio);
-            sensor_biometria = gera_aleatorio(biometria-2, biometria+1);
+            sensor_biometria = gera_aleatorio((int)aux-2, (int)aux+1);
             pthread_mutex_unlock(&m_sbio);
         }  
     }
@@ -251,116 +408,120 @@ int gera_aleatorio (int a, int b){
 void executar_comando(){
     
     //caso o comando seja atualizado enquanto aqui está em execução
-    PROTOCOLO buff = comando;
+    PROTOCOLO cm = comando;
     
     //validação de comandos
     //comando
-    if( strcmp(buff.comando, "porta") == 0 ){ 
-    
-        if (strcmp(buff.alvo, "abrir") == 0) abrir_porta();
-        else if (strcmp(buff.alvo, "fechar") == 0) fechar_porta();
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
-    }
-    else if( strcmp(buff.comando, "janela") == 0 ){
-    
-        if (strcmp(buff.alvo, "abrir") == 0) abrir_janela();
-        else if (strcmp(buff.alvo, "fechar") == 0) fechar_janela(); 
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");  
-    }
-    else if( strcmp(buff.comando, "cortina") == 0 ){
-    
-        if (strcmp(buff.alvo, "abrir") == 0) abrir_cortina();
-        else if (strcmp(buff.alvo, "fechar") == 0) fechar_cortina();
-        else if (strcmp(buff.alvo, "meia") ==  0) cortina_entreabertas();
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
-    }
-    else if( strcmp(buff.comando, "luz") == 0 ){
-    
-        if (strcmp(buff.alvo, "ligar") == 0) ligar_luz();
-        else if (strcmp(buff.alvo, "desligar") == 0) desligar_luz();
-        else if (strcmp(buff.alvo, "meia") ==  0) meia_luz();
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
-    
-    }
-    else if( strcmp(buff.comando, "temp") == 0 ){
-    
-        if (strcmp(buff.alvo, "ajustar") == 0){
+    if(strcmp(cm.comando, "abrir") == 0){
         
-            int valor = atoi(buff.valor);
+        if      (strcmp(cm.alvo, "porta") == 0)   abrir_porta();
+        else if (strcmp(cm.alvo, "janela") == 0)  abrir_janela();
+        else if (strcmp(cm.alvo, "cortina") == 0) abrir_cortina();
+        else    comando_invalido();
+        
+    }
+    else if(strcmp(cm.comando, "fechar") == 0){
+    
+        if      (strcmp(cm.alvo, "porta") == 0)   fechar_porta();
+        else if (strcmp(cm.alvo, "janela") == 0)  fechar_janela();
+        else if (strcmp(cm.alvo, "cortina") == 0) fechar_cortina();
+        else    comando_invalido();    
+    
+    }
+    else if(strcmp(cm.comando, "ligar") == 0){
+        
+        if      (strcmp(cm.alvo, "ar") == 0)     ligar_ar(20);
+        else if (strcmp(cm.alvo, "luz") == 0)    ligar_luz(USER);
+        else    comando_invalido();
+    
+    }
+    else if(strcmp(cm.comando, "desligar") == 0){
+        
+        if      (strcmp(cm.alvo, "ar") == 0)     desligar_ar(20);
+        else if (strcmp(cm.alvo, "luz") == 0)    desligar_luz(USER);
+        else    comando_invalido();
+    }
+    else if(strcmp(cm.comando, "ajustar") == 0){
+        
+        if (strcmp(cm.alvo, "luz") == 0){
             
-            if(strcmp(buff.opt, "set") == 0){
+            if (strcmp(cm.opt, "mea") == 0)   meia_luz();
+            else comando_invalido();
+        }
+        else if (strcmp(cm.alvo, "cortina") == 0){
+            
+            if (strcmp(cm.opt, "mea") == 0)   cortina_entreaberta();
+            else comando_invalido();
+        }
+        else if (strcmp(cm.alvo, "temp") == 0){
+        
+            int valor = atoi(cm.valor);
+        
+            if (strcmp(cm.opt, "set") == 0){
                 
-                if (valor < 17 && valor > 24) strcpy(retorno, "\n\tComando Inválido!!!\n\0");
-                else ajustar_temperatura(valor);           
+                if ((valor < 17 ||  valor > 24) || (temperatura == 0)) comando_invalido();
+                else ajustar_temperatura(valor);  
             }
-            else if(strcmp(buff.opt, "add") == 0) {
+            else if (strcmp(cm.opt, "add") == 0){
                 
                 int aux = temperatura;
                 int temp = aux + valor;
                 ajustar_temperatura(temp);
-            
             }
-            else if(strcmp(buff.opt, "dim") == 0){
-            
+            else if (strcmp(cm.opt, "dim") == 0){
+                
                 int aux = temperatura;
                 int temp = aux - valor;
                 ajustar_temperatura(temp);
-            
             }
-            else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
+            else comando_invalido();
         }
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
-
+        else comando_invalido();
+        
     }
-    else if ( strcmp(buff.comando, "ver") == 0 ){
+    else if(strcmp(cm.comando, "ver") == 0){
     
-        if (strcmp(buff.alvo, "porta") == 0){
-        
-            int aux = porta;
-            if (aux == 0) strcpy(retorno, "\n\tPorta fechada!\n\0");
-            else if (aux == 1) strcpy(retorno, "\n\tPorta aberta!\n\0");
-        }
-        else if (strcmp(buff.alvo, "janela") == 0){
-        
-            int aux = janela;
-            if (aux == 0) strcpy(retorno, "\n\tJanela fechada!\n\0");
-            else if (aux == 1) strcpy(retorno, "\n\tJanela aberta!\n\0");
-        }
-        else if (strcmp(buff.alvo, "cortina") == 0){
-        
-            int aux = cortina;
-            if (aux == 0) strcpy(retorno, "\n\tCortina fechada!\n\0");
-            else if (aux == 1) strcpy(retorno, "\n\tCortina aberta!\n\0");
-            else if (aux == 2) strcpy(retorno, "\n\tCortina entreaberta!\n\0");
-        }
-        else if (strcmp(buff.alvo, "luz") == 0){
-        
-            int aux = luz;
-            if (aux == 0) strcpy(retorno, "\n\tLuz apagada!\n\0");
-            else if (aux == 1) strcpy(retorno, "\n\tLuz acesa!\n\0");
-            else if (aux == 2) strcpy(retorno, "\n\tMeia luz!\n\0");
-        }
-        else if (strcmp(buff.alvo, "temp") == 0){
-        
-            int aux = temperatura;
-            char b[20] = "\0";
-            sprintf(b, "\n\tTemperatura: %d\n", aux);
-            strcpy(retorno, b);
+        if      (strcmp(cm.alvo, "porta") == 0)     retornar_porta();
+        else if (strcmp(cm.alvo, "janela") == 0)    retornar_janela();
+        else if (strcmp(cm.alvo, "cortina") == 0)   retornar_cortina();
+        else if (strcmp(cm.alvo, "luz") == 0)       retornar_luz();
+        else if (strcmp(cm.alvo, "temp") == 0)      retornar_temp();
+        else if (strcmp(cm.alvo, "term") == 0)      retornar_temp_sensor();
+        else comando_invalido();
+    
+    }
+    else if(strcmp(cm.comando, "cadbio") == 0){
+    
+        unsigned int cad = atoi(cm.alvo);
+        cadastrar_biometria(cad);
+    }
+    else if(strcmp(cm.comando, "reset") == 0){
+    
+        inicia_sistemas();   
+        pthread_mutex_lock(&m_ret);
+        strcpy(retorno, "\n\tReiniciar!\n\n\0");
+        pthread_mutex_unlock(&m_ret);
+         
+    }
+    else if(strcmp(cm.comando, "auto") == 0){
+    
+        if (strcmp(cm.alvo, "luz") == 0){
             
+            pthread_mutex_lock(&m_luz);
+            luz = luz * PROG;
+            pthread_mutex_unlock(&m_luz);
+            
+            pthread_mutex_lock(&m_ret);
+            strcpy(retorno, "\n\tLuz automática!\n\n\0");
+            pthread_mutex_unlock(&m_ret);
         }
-        else strcpy(retorno, "\n\tComando Inválido!!!\n\0");
+        else comando_invalido();
     }
-    else if ( strcmp(buff.comando, "cadbio") == 0 ){
-    
-        int aux = atoi(buff.alvo);
-        cadastrar_biometria(aux);
-    }
-    else if ( strcmp(buff.comando, "sair") == 0 ){
+    else if(strcmp(cm.comando, "sair") == 0){
         //sair na função de leitura da rede, pra fechar a conexão
-        
     }
     else{
-        strcpy(retorno, "\n\tComando Inválido!!!\n\0");
+        comando_invalido();
     }
 }
 
