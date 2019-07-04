@@ -8,3 +8,10 @@ $ make
 
 Apagar executável e arquivos objeto:
 $ make clean  
+
+Executar servidor:
+$ bin/srv [porta]
+
+Executar cliente:
+$ bin/cli [ip] [porta]
+
